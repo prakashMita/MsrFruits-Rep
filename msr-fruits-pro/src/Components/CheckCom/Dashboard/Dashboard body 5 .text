@@ -1,0 +1,288 @@
+import React, { useState, useEffect } from "react";
+import axios from 'axios';  // Import Axios for making HTTP requests
+
+function Body() {
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [monthTotalPrice, setMonthTotalPrice] = useState(0); // State for selected month total price
+  const [todayTotalPrice, setTodayTotalPrice] = useState(0); // State for today's total price
+  const [selectedMonth, setSelectedMonth] = useState(""); // State for storing selected month
+  const [totalOrderCount, setTotalOrderCount] = useState(0); // State for total order count
+  const [monthOrderCount, setMonthOrderCount] = useState(0); // State for month-specific order count
+  const [todayOrderCount, setTodayOrderCount] = useState(0); // State for today's unique order count
+
+  // Fetch customer list from backend
+  useEffect(() => {
+    const fetchCustomerList = async () => {
+      try {
+        const response = await axios.get('http://localhost:8081/customerlist');  // Replace with your actual API endpoint
+        const customers = response.data;
+        
+        setFilteredCustomers(customers);  // Set the fetched data to state
+
+        // Calculate the total price for all customers
+        const total = customers.reduce((sum, customer) => sum + (parseFloat(customer.Price) || 0), 0);
+        setTotalPrice(total);  // Update the total price state
+        
+        // Calculate the total price for today
+        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+        const todayTotal = customers.reduce((sum, customer) => {
+          const customerDate = new Date(customer.created_at).toISOString().split('T')[0];
+          return customerDate === today ? sum + (parseFloat(customer.Price) || 0) : sum;
+        }, 0);
+        setTodayTotalPrice(todayTotal);  // Update today's total price state
+        
+        // Calculate the total number of unique orders
+        const uniqueOrderIds = new Set(customers.map(customer => customer.OrderId));
+        setTotalOrderCount(uniqueOrderIds.size);  // Update total order count state
+
+        // Calculate the number of unique orders for today
+        const uniqueTodayOrderIds = new Set(customers
+          .filter(customer => new Date(customer.created_at).toISOString().split('T')[0] === today)
+          .map(customer => customer.OrderId)
+        );
+        setTodayOrderCount(uniqueTodayOrderIds.size);  // Update today's unique order count state
+        
+      } catch (error) {
+        console.error("Error fetching customer data:", error);
+      }
+    };
+
+    fetchCustomerList();  // Fetch customer data when the component mounts
+  }, []);
+
+  // Handle month selection change
+  const handleMonthChange = (event) => {
+    const selectedMonthValue = event.target.value;
+    setSelectedMonth(selectedMonthValue);
+
+    if (selectedMonthValue) {
+      // Filter customers by the selected month
+      const filteredByMonth = filteredCustomers.filter(customer => {
+        const customerMonth = new Date(customer.created_at).toLocaleString('default', { month: 'long' });
+        return customerMonth === selectedMonthValue;
+      });
+
+      // Calculate the total price for the selected month
+      const totalForMonth = filteredByMonth.reduce((sum, customer) => sum + (parseFloat(customer.Price) || 0), 0);
+      setMonthTotalPrice(totalForMonth);
+
+      // Calculate the number of unique orders for the selected month
+      const uniqueOrderIdsForMonth = new Set(filteredByMonth.map(customer => customer.OrderId));
+      setMonthOrderCount(uniqueOrderIdsForMonth.size);
+    } else {
+      setMonthTotalPrice(0); // Reset if no month is selected
+      setMonthOrderCount(0);
+    }
+  };
+
+  return (
+    <>
+      <div className="col-10">
+        <div className="py-2"></div>
+
+        {/* row-1 */}
+        <div className="">
+          <div className="row justify-content-center ms-5">
+            <div className="row">
+              <div className="col-12">
+                <h5 className="ps-0">Total Order Details</h5>
+              </div>
+            </div>
+
+            {/* Total Sales Card */}
+            <div className="col-md-6 col-lg-4 col-4">
+              <div className="card report-card">
+                <div className="card-body pb-4">
+                  <div className="row d-flex justify-content-center pb-3">
+                    <div className="col">
+                      <p className="text-dark mb-0 fw-semibold">Total Sales</p>
+                      <h3 className="m-0">
+                        <i className="bi bi-currency-rupee"></i>
+                        <span className="text-warning">{totalPrice.toFixed(2)}</span>
+                      </h3>
+                      <p className="mb-0 text-truncate text-muted">
+                        <div className="py-2"></div>
+                        <span className="text-success">
+                          <i className="mdi mdi-trending-up"></i>8.5%
+                        </span>{" "}New Sessions Today
+                      </p>
+                    </div>
+                    <div className="col-auto align-self-center">
+                      <div className="report-main-icon bg-light-alt">
+                        <i data-feather="users" className="align-self-center text-muted icon-sm"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Month Sales Card with Dropdown */}
+            <div className="col-md-6 col-lg-4 col-4">
+              <div className="card report-card">
+                <div className="card-body">
+                  <div className="row d-flex justify-content-center">
+                    <div className="col">
+                      <p className="text-dark mb-0 fw-semibold">Month Sales</p>
+                      <h3 className="m-0">
+                        <i className="bi bi-currency-rupee"></i>
+                        <span className="text-warning">{monthTotalPrice.toFixed(2)}</span>
+                      </h3>
+                      <p className="text-dark mb-0 fw-semibold">
+                        <select value={selectedMonth} onChange={handleMonthChange} className="form-select">
+                          <option value="">Select Month</option>
+                          <option value="January">January</option>
+                          <option value="February">February</option>
+                          <option value="March">March</option>
+                          <option value="April">April</option>
+                          <option value="May">May</option>
+                          <option value="June">June</option>
+                          <option value="July">July</option>
+                          <option value="August">August</option>
+                          <option value="September">September</option>
+                          <option value="October">October</option>
+                          <option value="November">November</option>
+                          <option value="December">December</option>
+                        </select>
+                      </p>
+                      <p className="mb-0 text-truncate text-muted">
+                        <span className="text-success">
+                          <i className="mdi mdi-trending-up"></i>1.5%
+                        </span>{" "}Weekly Avg.Sessions
+                      </p>
+                    </div>
+                    <div className="col-auto align-self-center">
+                      <div className="report-main-icon bg-light-alt">
+                        <i data-feather="clock" className="align-self-center text-muted icon-sm"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Today's Total Sales Card */}
+            <div className="col-md-6 col-lg-4 col-4">
+              <div className="card report-card">
+                <div className="card-body pb-4">
+                  <div className="row d-flex justify-content-center pb-3">
+                    <div className="col">
+                      <p className="text-dark mb-0 fw-semibold">Today’s Sales</p>
+                      <h3 className="m-0">
+                        <i className="bi bi-currency-rupee"></i>
+                        <span className="text-warning">{todayTotalPrice.toFixed(2)}</span>
+                      </h3>
+                      <p className="mb-0 text-truncate text-muted">
+                        <span className="text-danger">
+                          <div className="py-2"></div>
+                          <i className="mdi mdi-trending-down"></i>35%
+                        </span>{" "}Bounce Rate Weekly
+                      </p>
+                    </div>
+                    <div className="col-auto align-self-center">
+                      <div className="report-main-icon bg-light-alt">
+                        <i data-feather="activity" className="align-self-center text-muted icon-sm"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* row -2  */}
+        <div className="pt-3">
+          <div className="row ms-5">
+            <div className="col-md-6 col-lg-4 col-4">
+              <div className="card report-card">
+                <div className="card-body pb-4">
+                  <div className="row d-flex justify-content-center pb-3">
+                    <div className="col">
+                      <p className="text-dark mb-0 fw-semibold">Total Order</p>
+                      <h3 className="m-0">
+                        <i className="bi bi-handbag"></i>
+                        <span className="text-warning"> {totalOrderCount}</span>
+                      </h3>
+                      <p className="mb-0 text-truncate text-muted">
+                      <div className="py-2"></div>
+                        <span className="text-success">
+                          <i className="mdi mdi-trending-up"></i>8.5%
+                        </span>{" "}New Sessions Today
+                      </p>
+                    </div>
+                    <div className="col-auto align-self-center">
+                      <div className="report-main-icon bg-light-alt">
+                        <i data-feather="users" className="align-self-center text-muted icon-sm"></i>  
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div> 
+
+            {/* Month Order Card */}
+            <div className="col-md-6 col-lg-4 col-4">
+              <div className="card report-card">
+                <div className="card-body pb-4">
+                  <div className="row d-flex justify-content-center pb-3">
+                    <div className="col">
+                      <p className="text-dark mb-0 fw-semibold">Month Order <span className="text-info"></span></p>
+                      <h3 className="m-0">
+                        <i className="bi bi-handbag"></i>
+                        <span className="text-warning"> {monthOrderCount}</span>
+                      </h3>
+                      <p className="mb-0 text-truncate text-muted">
+                      <div className="py-2"></div>
+                        <span className="text-success">
+                          <i className="mdi mdi-trending-up"></i>1.5%
+                        </span>{" "}Weekly Avg.Sessions
+                      </p>
+                    </div>
+                    <div className="col-auto align-self-center">
+                      <div className="report-main-icon bg-light-alt">
+                        <i data-feather="clock" className="align-self-center text-muted icon-sm"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div> 
+
+            {/* Today's Order Card */}
+            <div className="col-md-6 col-lg-4 col-4">
+              <div className="card report-card">
+                <div className="card-body pb-4">
+                  <div className="row d-flex justify-content-center pb-3">                                                 
+                    <div className="col">
+                      <p className="text-dark mb-0 fw-semibold">Today's Order</p>
+                      <h3 className="m-0">
+                        <i className="bi bi-handbag"></i> 
+                        <span className="text-warning"> {todayOrderCount}</span>
+                      </h3>
+                      <p className="mb-0 text-truncate text-muted">
+                      <div className="py-2"></div>
+                        <span className="text-danger">
+                          <i className="mdi mdi-trending-down"></i>35%
+                        </span>{" "}Bounce Rate Weekly
+                      </p>
+                    </div>
+                    <div className="col-auto align-self-center">
+                      <div className="report-main-icon bg-light-alt">
+                        <i data-feather="activity" className="align-self-center text-muted icon-sm"></i>  
+                      </div>
+                    </div> 
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> 
+        </div> 
+      </div>
+    </>
+  );
+}
+
+export default Body;

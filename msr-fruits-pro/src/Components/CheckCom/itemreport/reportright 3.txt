@@ -1,0 +1,182 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
+import axios from 'axios';
+
+function ReportRight() {
+  const location = useLocation();
+  const { tableData, OrderId, UserName, UserMobile } = location.state || {};
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [customers, setCustomers] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const handleViewClick = async (orderId) => {
+    console.log(`Fetching details for OrderId: ${orderId}`);
+    setIsModalOpen(true);
+    try {
+      const response = await axios.get(`http://localhost:8081/customerlist/${orderId}`);
+      setSelectedOrder(response.data);
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        console.error(`Order with ID ${orderId} not found.`);
+        alert(`Order with ID ${orderId} not found.`);
+      } else {
+        console.error('Error fetching order details:', error);
+        alert('An error occurred while fetching the order details.');
+      }
+      setSelectedOrder(null);
+    }
+  };
+
+  const storeCustomerAndTableData = useCallback(async () => {
+    try {
+      // Posting customer and table data to the backend
+      await axios.post('http://localhost:8081/customerlist', {
+        OrderId,
+        UserName,
+        UserMobile,
+        tableData
+      });
+
+      // Fetching updated customer data
+      const response = await axios.get('http://localhost:8081/customerlist');
+      console.log('Fetched data:', response.data);
+
+      const uniqueCustomers = getUniqueCustomers(response.data);
+      setCustomers(uniqueCustomers);
+    } catch (error) {
+      console.error('Error storing or fetching data:', error);
+      alert('Failed to store data.');
+    }
+  }, [OrderId, UserName, UserMobile, tableData]);
+
+  // Function to handle save button click
+  const handleSaveClick = () => {
+    storeCustomerAndTableData();
+  };
+
+  const getUniqueCustomers = (data) => {
+    const seen = new Set();
+    return data.filter((customer) => {
+      const duplicate = seen.has(customer.OrderId);
+      seen.add(customer.OrderId);
+      return !duplicate;
+    });
+  };
+
+  return (
+    <div>
+      <h3>Order Report</h3>
+      <button onClick={handleSaveClick}>Save Data</button>
+      <table>
+        <thead>
+          <tr>
+            <th>OrderID</th>
+            <th>Name</th>
+            <th>Mobile</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {customers.length > 0 ? (
+            customers.map((customer, index) => (
+              <tr key={index}>
+                <td>{customer.OrderId}</td>
+                <td>{customer.UserName || 'N/A'}</td>
+                <td>{customer.UserMobile || 'N/A'}</td>
+                <td>
+                  <button onClick={() => handleViewClick(customer.OrderId)}>
+                    {isModalOpen && selectedOrder?.OrderId === customer.OrderId ? 'Hide' : 'View'}
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td>{OrderId}</td>
+              <td>{UserName || 'N/A'}</td>
+              <td>{UserMobile || 'N/A'}</td>
+              <td>
+                <button onClick={() => handleViewClick(OrderId)}>
+                  {isModalOpen ? 'Hide' : 'View'}
+                </button>
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+
+      {isModalOpen && selectedOrder && (
+        <div className="modal">
+          <div className="modal-content">
+            <span className="close" onClick={() => setIsModalOpen(false)}>&times;</span>
+            <h4>Order Details</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>Fruit</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedOrder.length > 0 ? (
+                  selectedOrder.map((item, index) => (
+                    <tr key={index}>
+                      <td>{item.Fruit}</td>
+                      <td>{item.Quantity}</td>
+                      <td>{item.Price}</td>
+                      <td>{item.Amount}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4">No details available</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        .modal {
+          display: flex;
+          position: fixed;
+          z-index: 1;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          overflow: auto;
+          background-color: rgba(0,0,0,0.4);
+          justify-content: center;
+          align-items: center;
+        }
+        .modal-content {
+          background-color: white;
+          padding: 20px;
+          border: 1px solid #888;
+          width: 80%;
+          max-width: 500px;
+        }
+        .close {
+          color: #aaa;
+          float: right;
+          font-size: 28px;
+          font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+          color: black;
+          text-decoration: none;
+          cursor: pointer;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+export default ReportRight;

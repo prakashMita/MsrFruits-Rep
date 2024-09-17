@@ -1,0 +1,141 @@
+-- create database msrfruits;
+-- use msrfruits;
+-- create table prodects (Id int primary key AUTO_INCREMENT,Fruit varchar(200), Quantity varchar(200), Price varchar(200), Amount varchar(200), TotalAmount varchar(200));
+-- insert into prodects value (1,"Apple",2,100,200,200);
+-- select * from prodects;
+drop table prodects;
+-- create table customer(Id int primary key AUTO_INCREMENT,Orderid int, CustomerName varchar(200), PhoneNumber varchar(200));
+-- insert into customer value (1,504,"prakashs",9555586525);
+-- select * from customer;
+drop table customer;
+-- select prodects.Id, customer.CustomerName, Customer.PhoneNumber, Customer.Orderid, prodects.Fruit, prodects.Quantity, prodects.Price, prodects.Amount, prodects.TotalAmount
+-- from prodects
+-- inner join customer
+-- on prodects.Id=customer.Id;
+
+
+
+-- --------------------------------------------- ------------------------------------------
+
+
+
+-- Create the database
+CREATE DATABASE msrfruits;
+
+USE msrfruits;
+
+-- Create the prodects table
+CREATE TABLE prodects (
+  Id INT PRIMARY KEY AUTO_INCREMENT,
+  OrderId INT,
+  Fruit VARCHAR(200),
+  Quantity INT,
+  Price VARCHAR(200),
+  Amount VARCHAR(200),
+  TotalAmount VARCHAR(200)
+);
+
+-- Insert sample data into prodects table
+INSERT INTO prodects (OrderId, Fruit, Quantity, Price, Amount, TotalAmount ) VALUES
+(504, "Apple", 2, 100.00, 200.00, 200.00);
+select * from prodects;
+drop table prodects;
+
+
+-- user details ----
+
+-- Create the users table
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  OrderId INT NOT NULL,
+  UserName VARCHAR(255) NOT NULL,
+  UserMobile VARCHAR(20) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+select * from users;
+drop table users;
+
+
+-- status 
+create table orderstatus(id INT AUTO_INCREMENT PRIMARY KEY,
+OrderId INT NOT NULL,
+OrderStatus VARCHAR(20) NOT NULL,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+select * from orderstatus;
+drop table orderstatus;
+
+
+
+
+CREATE TABLE customerlist (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  OrderId INT NOT NULL,
+  UserName VARCHAR(255) NOT NULL,  -- Add UserName field
+  UserMobile VARCHAR(20) NOT NULL, -- Add UserMobile field
+  Fruit VARCHAR(255) NOT NULL,
+  Quantity INT NOT NULL,
+  Price DECIMAL(10, 2) NOT NULL,
+  Amount DECIMAL(10, 2) NOT NULL,
+  OrderStatus VARCHAR(20) NOT NULL DEFAULT 'Unpaid',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (id)  -- Ensure unique combination of OrderId and Fruit
+);
+INSERT INTO customerlist (OrderId, UserName, UserMobile, Fruit, Quantity, Price, Amount, OrderStatus) 
+VALUES (268, 'prakashs', '9595955', 'Apple', 2, '2', '4.00', 'Unpaid');
+
+
+SELECT u.OrderId, u.UserName, u.UserMobile, c.Fruit, c.Quantity, c.Price, c.Amount
+FROM users u
+JOIN customerlist c ON u.OrderId = c.OrderId;
+
+
+SELECT cl.*, os.OrderStatus
+FROM customerlist cl
+LEFT JOIN orderstatus os ON cl.OrderId = os.OrderId;
+
+UPDATE customerlist cl
+JOIN orderstatus os ON cl.OrderId = os.OrderId
+SET cl.OrderStatus = os.OrderStatus;
+
+drop table customerlist;
+SELECT * FROM customerlist;
+
+
+
+SELECT 
+    u.OrderId, 
+    u.UserName, 
+    u.UserMobile, 
+    c.Fruit, 
+    c.Quantity, 
+    c.Price, 
+    c.Amount,
+    os.OrderStatus
+FROM 
+    users u
+JOIN 
+    customerlist c ON u.OrderId = c.OrderId
+JOIN 
+    orderstatus os ON u.OrderId = os.OrderId;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

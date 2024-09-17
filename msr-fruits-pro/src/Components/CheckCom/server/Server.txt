@@ -1,0 +1,114 @@
+const express = require('express');
+const mysql = require('mysql');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const app = express();
+const port = 8081;
+
+// Cross-origin resource sharing (CORS)
+// Enable CORS
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type']
+}));
+
+// Parse JSON bodies
+app.use(bodyParser.json());
+
+// Create connection to the database
+
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: 'Mysql-prakashs',
+  database: 'msrfruits'
+});
+
+// const db = mysql.createConnection({
+//   host: 'localhost',
+//   user: 'react_user',
+//   password: 'React@123',
+//   database: 'react_db'
+// });
+
+// Connect to the database
+db.connect(err => {
+  if (err) {
+    console.error('Database connection error:', err);
+    process.exit(1); // Exit process if unable to connect
+  }
+  console.log('MySQL connected...');
+});
+
+// Route to get all products
+app.get('/prodects', (req, res) => {
+  console.log('Received request for /prodects');
+  const sql = 'SELECT * FROM prodects';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Database query error' });
+    }
+    res.json(results);
+  });
+});
+
+// Route to add a new product
+app.post('/prodects', (req, res) => {
+  const {OrderId, Fruit, Quantity, Price, Amount, TotalAmount} = req.body;
+  console.log('Received data:', req.body);
+
+  const sql = 'INSERT INTO prodects (OrderId, Fruit, Quantity, Price, Amount, TotalAmount) VALUES (?, ?, ?, ?, ?, ?)';
+  const values = [OrderId, Fruit, Quantity, Price, Amount, TotalAmount];
+
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('Database insertion error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    console.log('Insert result:', result);
+    res.json({ message: 'New product added', id: result.insertId });
+  });
+});
+
+// Route to delete a product by ID
+app.delete('/prodects/:id', (req, res) => {
+  const id = req.params.id;
+  const sql = 'DELETE FROM prodects WHERE id = ?';
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error('Database deletion error:', err);
+      return res.status(500).json({ error: 'Database deletion error' });
+    }
+    res.json({ message: 'Product deleted' });
+  });
+});
+
+
+
+
+// Route to delete by All Prodect
+app.delete('/prodects', async (req, res) => {
+  try {
+    const sql = 'DELETE FROM prodects';
+    db.query(sql, (err, result) => {
+      if (err) throw err;
+      res.json({ message: 'All products deleted', affectedRows: result.affectedRows });
+    });
+  } catch (error) {
+    console.error('An unexpected error occurred:', error);
+    res.status(500).json({ error: 'An unexpected error occurred' });
+  }
+});
+
+
+
+
+
+
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});

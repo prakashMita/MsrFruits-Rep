@@ -1,0 +1,718 @@
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Icon } from '@iconify/react';
+import addCircleOutline from '@iconify/icons-ion/add-circle-outline';
+
+function BodyLeft() {
+  const location = useLocation();
+  const { orderId } = location.state || {};
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({ name: '', mobile: '' });
+  const [values, setValues] = useState({
+    Fruit: '',
+    Quantity: '',
+    Price: '',
+    Amount: '',
+    TotalAmount: '',
+    OrderId:'',
+  });
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [randomNumber, setRandomNumber] = useState(null);
+  // const [submit, setSubmit] = useState(false); 
+  const [status, setStatus] = useState('Unpaid');
+
+
+  
+  // UseEffect to load data from localStorage
+  useEffect(() => {
+    const savedFormData = localStorage.getItem('formData');
+    const savedValues = localStorage.getItem('values');
+
+    if (savedFormData) {
+      setFormData(JSON.parse(savedFormData));
+    }
+    if (savedValues) {
+      setValues(JSON.parse(savedValues));
+    }
+
+    axios.get('http://localhost:8081/prodects')
+      .then(response => {
+        setData(response.data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleInputChange = (e) => {
+    const { name: inputName, value } = e.target;
+    setValues(prevValues => {
+      const newValues = {
+        ...prevValues,
+        [inputName]: value
+      };
+
+      // Save values to localStorage
+      localStorage.setItem('values', JSON.stringify(newValues));
+
+      // Calculate Amount if Quantity or Price changes
+      if (inputName === 'Quantity' || inputName === 'Price') {
+        const quantity = parseFloat(newValues.Quantity) || 0;
+        const price = parseFloat(newValues.Price) || 0;
+        newValues.Amount = (quantity * price).toFixed(2);
+      }
+
+      return newValues;
+    });
+  };
+
+  const handleChange = (e) => {
+    const newFormData = { ...formData, [e.target.name]: e.target.value };
+    setFormData(newFormData);
+
+    // Save form data to localStorage
+    localStorage.setItem('formData', JSON.stringify(newFormData));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+  
+    // Log orderId for debugging
+    console.log("Order ID:", orderId);
+  
+    if (!orderId) {
+      alert('Please Generate Order ID');
+      return;
+    }
+  
+    if (!values.Fruit || !values.Quantity || !values.Price) {
+      alert('Please fill out all required fields.');
+      return;
+    }
+  
+    const totalAmount = data.reduce((total, item) => total + parseFloat(item.Amount || 0), 0).toFixed(2);
+  
+    // Log values to ensure correct data is being sent
+    console.log({
+      ...values,
+      OrderID: orderId,
+      TotalAmount: totalAmount,
+    });
+    // console.log(values)
+  
+    axios.post('http://localhost:8081/prodects', {
+      ...values,
+      OrderId: orderId,
+      TotalAmount: totalAmount,
+    }, {
+      headers: { 'Content-Type': 'application/json' },
+    })
+    .then(() => axios.get('http://localhost:8081/prodects'))
+    .then(response => {
+      setData(response.data);
+      // Optionally reset the form fields here
+    })
+    .catch(err => {
+      alert('Error: ' + (err.response ? err.response.data.error : 'Unknown error'));
+    });
+  };
+  
+
+  const clearFormData = () => {
+    setFormData({ name: '', mobile: '' });
+    setValues({
+      Fruit: '',
+      Quantity: '',
+      Price: '',
+      Amount: '',
+      TotalAmount: '',
+      OrderID: '', // Reset OrderID here as well
+    });
+  
+    // Clear localStorage
+    localStorage.removeItem('formData');
+    localStorage.removeItem('values');
+  };
+  // Calculate total amount before handleClick
+  const totalAmount = data.reduce((total, item) => total + parseFloat(item.Amount || 0), 0).toFixed(2);
+  // const handleClick = () => {
+  //   navigate('/invoice', {
+  //     state: {
+  //       tableData: data,
+  //       orderId: randomNumber,
+  //       totalAmount: data.reduce((total, item) => total + parseFloat(item.Amount || 0), 0).toFixed(2),
+  //       totalItem: data.length,
+  //     }
+  //   });
+  // };
+
+  const clearData = (e) => {
+    e.preventDefault();
+    if (window.confirm("Are you sure you want to delete all items?")) {
+      setLoading(true);
+
+
+      axios.delete('http://localhost:8081/prodects')
+        .then(() => {
+
+          setData([]);
+
+          // alert('All items have been deleted successfully.');
+        })
+        .catch(err => {
+          console.error('There was an error deleting the data!', err);
+          alert('Failed to delete items. Please try again.');
+        })
+        .finally(() => {
+
+    localStorage.removeItem('formData');
+    localStorage.removeItem('values');
+          setLoading(false);
+        });
+    }
+  };
+  
+
+  const handleStatusChange = (e) => {
+    setStatus(e.target.value);
+  };
+
+  const handleDelete = (id, e) => {
+    e.preventDefault();
+    if (window.confirm("Would you like to delete?")) {
+      axios.delete(`http://localhost:8081/prodects/${id}`)
+        .then(() => {
+          setData(data.filter(d => d.Id !== id));
+        })
+        .catch(err => console.log(err));
+    }
+  };
+
+
+
+
+
+
+  const handleClick = () => {
+    const totalAmount = data.reduce((total, item) => total + parseFloat(item.Amount || 0), 0).toFixed(2);
+  
+    navigate('/ReportRight', {
+      state: {
+        tableData: data,
+        OrderId: orderId,
+        totalAmount: totalAmount,
+        totalItem: data.length,
+        UserName:formData.name,
+        UserMobile:formData.mobile,
+      }
+    });
+  };
+
+
+  const handlePrint = () => {
+    const currentDate = new Date().toLocaleDateString();
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const customerName = formData.name || "Not Provided";
+    const phone = formData.mobile || "Not Provided";
+    const totalAmount = data.reduce((total, item) => total + parseFloat(item.Amount || 0), 0).toFixed(2);
+  
+    console.log("FormData:", formData); // Debugging statement
+    console.log("Total Amount:", totalAmount); // Debugging statement
+  
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.open();
+    printWindow.document.write(`
+      <html>
+      <head>
+        <title>Invoice</title>
+        <style>
+             body {
+      font-family: Courier, monospace;
+      width: 70mm;
+      margin: 0;
+      padding: 0;
+      font-size: 10px;
+    }
+    .center {
+      text-align: center;
+    }
+    .bold {
+      font-weight: bold;
+      padding-left:10px;
+
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .table th, .table td {
+      border-bottom: 1px dashed #000;
+      padding: 2px 0;
+      // text-align: left;
+      text-align: center;
+    }
+.row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.col-6, .col-5 {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.text-right {
+  text-align: right;
+}
+    .footeritem {
+      margin-top: 10px;
+    }
+    .total {
+      font-size: 12px;
+    }
+    .comtitle {
+      font-size: 14px;
+    }
+    .fullbody {
+      margin: auto;
+    }
+      .topbody{
+      margin:auto 
+      }
+      .border{
+      width:270px
+      }
+ .table th{
+ padding:5px
+ }
+
+        </style>
+      </head>
+      <body class='fullbody'>
+        <div class="center bold comtitle">MSR.com</div>
+        <div class='topbody'>
+        <hr class='border'/>
+        <div class="row ">
+          <div class="col-6 text-left">
+            <div>Invoice ID: ${orderId}</div>
+            <div>Customer: ${customerName}</div>
+            <div>Phone: ${phone}</div>
+          </div>
+          <div class="col-1"></div>
+          <div class="col-5 text-right ">
+            <div class='text-start'>Date: ${currentDate}</div>
+            <div>Time: ${currentTime}</div>
+            <div>Status: ${status}</div>
+          </div>
+        </div>
+        <hr class='border' />
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th class='tablehead'>Fruit </th>
+              <th class='tablehead'> Quantity </th>
+              <th class='tablehead'> Price </th>
+              <th class='tablehead'> Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map(d => `
+              <tr>
+                <td>${d.Fruit}</td>
+                <td>${d.Quantity}</td>
+                <td>${d.Price}</td>
+                <td>${d.Amount}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div class="row footeritem">
+          <div class='col-4 text-left'>
+            <div class='bold'>
+              <span>Total Item: ${data.length}</span>
+            </div>
+          </div>
+          <div class='col-8 text-right'>
+            <div class="total">
+              <span class="bold">Total: $ ${parseFloat(totalAmount).toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+        <hr class='border' />
+        <div class="center">Thank you for your purchase!</div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+  
+  
+  return (
+    <>
+      <div className='row'>
+        {/* col- 1 */}
+        <div className='col-8 border-end pe-3 border-3'>
+          <div className='row'>
+            <div className='col-12'>
+            <div className="row py-2">
+              <div className="col-6">
+                <h3>Customer Info</h3>
+              </div>
+              <div className="col-6 pt-2 text-end">
+  <div>
+    <h5>
+      Order Id: 
+      <span className="rounded text-dark fw-bold fs-4 text-secondary px-3 border mx-1">
+      {orderId || "No Order ID"}
+      </span>
+    </h5>
+  </div>
+</div>
+
+            </div>
+            </div>
+          </div>
+          <div className='row border border-2 rounded  my-3 py-auto'>
+              <div className='col-6 '>
+              <span className=' fw-bold col-8 fs-5 ps-6 text-end pe-0'><i className="bi bi-person-bounding-box px-2"></i><span className='fw-bold pt-1'>Name : </span><span className='text-secondary fw-bold fs-5'>{formData.name} </span></span>
+              </div>
+              <div className='col-6 text-center'>
+                <span className='row'>
+                <span className=' fw-bold col-8 fs-5 ps-6 text-end pe-0'><i className="bi bi-telephone-fill px-2"></i>Phone : <span className='text-dark pe-1'>+91</span></span><span className='text-secondary fw-bold fs-5 col-4 text-start ps-0'>{formData.mobile} <span className=''></span></span>
+                </span>
+              </div>
+            </div>
+
+
+
+          <form onSubmit={handleSubmit} className='px-1'>
+                                      <div className='row mx-auto'>
+                            <div className="form-group col-6">
+                                <label htmlFor="name">Name</label>
+                                <input
+                                    type="text"
+                                    id="name"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange} 
+                                     className='p-1'
+                                    required
+                                />
+                            </div>
+                            <div className="form-group col-6">
+                                <label htmlFor="mobile">Mobile Number</label>
+                                <input
+                                    type="number"
+                                    id="mobile"
+                                    name="mobile"
+                                    value={formData.mobile}
+                                    onChange={handleChange}
+                                    className='p-1'
+                                    required
+                                />
+                            </div>
+
+
+                            </div>
+  <div className="row py-4">
+    <div className="col-4">
+      <label htmlFor="Fruit" className="py-1">
+        Category List <span className="text-danger">*</span>
+      </label>
+      <select
+        className="form-select"
+        id="Fruit"
+        name="Fruit"
+        value={values.Fruit}
+        onChange={handleInputChange}
+        required
+      >
+        <option value="">Category</option>
+        <option value="Banana">Banana</option>
+        <option value="Apple">Apple</option>
+        <option value="Cherry">Cherry</option>
+        <option value="Grape">Grape</option>
+        <option value="Kiwi">Kiwi</option>
+        <option value="Strawberry">Strawberry</option>
+        <option value="Mango">Mango</option>
+        <option value="Orange">Orange</option>
+      </select>
+    </div>
+    <div className="col-3">
+      <div className="form-outline">
+        <label htmlFor="Quantity" className="py-1">
+          Quantity <span className="text-danger">*</span>
+        </label>
+        <input
+          type="number"
+          id="Quantity"
+          name="Quantity"
+          className="form-control"
+          value={values.Quantity}
+          onChange={handleInputChange}
+          required
+        />
+      </div>
+    </div>
+    <div className="col-3">
+      <div className="form-outline">
+        <label htmlFor="Price" className="py-1">
+          Price <span className="text-danger">*</span>
+        </label>
+        <input
+          type="number"
+          id="Price"
+          name="Price"
+          className="form-control"
+          value={values.Price}
+          onChange={handleInputChange}
+          required
+        />
+      </div>
+    </div>
+    <div className="col-2">
+      <div className="p-1"></div>
+      <button type="submit" className="btn btn-success w-75 m-0 my-4 p-1">ADD +</button>
+    </div>
+  </div>
+</form>
+
+
+
+          {/* ... (rest of your JSX) ... */}
+          <div className="row bg-warning rounded ">
+            <div className="col-3 my-auto pt-1">
+              <h3>Add Item</h3>
+            </div>
+            <div className="col-3"></div>
+            <div className="col-4 my-auto pt-2 text-end pe-0">
+              <h6>Total Item <span className='border border-4 border-white px-3 rounded bg-white'>{data.length}</span></h6>
+            </div>
+            <div className="col-2  my-auto text-end pe-0 ">
+              <button onClick={clearData} className='border border-danger bg-danger'>Clear All</button>
+            </div>
+          </div>
+
+          <div className="scrollable-table-container">
+            {data.length === 0 ?
+              <div className=''>
+                <div className='py-5'></div>
+                <div className='mx-auto text-center '>
+                  <span className=''><svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" fill="currentColor" className="bi bi-bag-plus-fill text-secondary" viewBox="0 0 16 16">
+                    <path fillRule="evenodd" d="M10.5 3.5a2.5 2.5 0 0 0-5 0V4h5zm1 0V4H15v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V4h3.5v-.5a3.5 3.5 0 1 1 7 0M8.5 8a.5.5 0 0 0-1 0v1.5H6a.5.5 0 0 0 0 1h1.5V12a.5.5 0 0 0 1 0v-1.5H10a.5.5 0 0 0 0-1H8.5z" />
+                  </svg></span>
+                  <h4 className='fs-1 text-secondary'>Add Item</h4>
+                </div>
+              </div>
+              :
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th scope="col" className='text-center'>Fruit</th>
+                    <th scope="col" className='text-center'>Quantity</th>
+                    <th scope="col" className='text-center'>Price</th>
+                    <th scope="col" className='text-center'>Amount</th>
+                    <th scope="col" className='text-center'>Delete</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.map((d) => (
+                    <tr scope="row" key={d.Id}>
+                      <td className='text-center'>{d.Fruit}</td>
+                      <td className='text-center'>{d.Quantity}</td>
+                      <td className='text-center'>{d.Price}</td>
+                      <td className='text-center'>{d.Amount}</td>
+                      <td className='text-center'>
+                        <i onClick={(e) => handleDelete(d.Id, e)} className="bi bi-trash3 text-danger"></i>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            }
+          </div>
+
+        </div>
+
+        {/* col -2 */}
+        <div className='col-4 p-0'>
+
+              <div className="">
+<div className="card p-0">
+  <div className="card-body container">
+    <div className="mb-2 mt-3 ">
+      <div className="row d-flex align-items-baseline p-0">
+        <div className="col-6  ">
+          <p style={{ color: '#7e8d9f', fontSize: '20px' }}>
+            Invoice <span></span> <strong>ID: {data.orderId}</strong>
+          </p>
+        </div>
+        <div className='col-6 text-end'>
+          {/* <p style={{ color: '#7e8d9f', fontSize: '20px' }}>
+            Name : <span></span> <strong>{formData.name}</strong>
+          </p> */}
+        </div>
+        <hr />
+      </div>
+
+      <div className=" ">
+        <div className=" text-center mx-auto ">
+          <div className=' mx-auto p-0 py-0'>
+          <p className=" fs-5 fw-bold pb-0 mb-0"><span className='px-0 rounded rounded-2 text-dark'>MSR.com</span></p>
+          </div>
+        </div>
+        <div className="row mx-auto p-0 m-0 py-2 my-3 border-bottom border-2 p-0">
+          <div className="col-6 p-0 ">
+            {/* <ul className="list-unstyled p-0"> */}
+            <div  className=''>
+            <span className='p-0 text-center my-auto'><span className=' p-0 text-muted fw-bold p-0 text-center fs-6'>To: </span><span style={{ color: '#5d9fc5' }} className=' p-0 text-start'>{formData.name}</span></span>
+            </div>
+             <div className=''>
+              <span className=''><span className='text-muted fw-bold p-0 text-center'><i className="bi bi-telephone-fill"></i> : </span><span className=' p-0'>{formData.mobile}</span></span>
+              </div>
+            {/* </ul> */}
+          </div>
+
+          <div className='col-6'>
+          <div className='row'>
+               <span className='col-6'> <i className="fas fa-circle" style={{ color: '#84B0CA' }}></i> <span className="me-1 fw-bold">Status:</span></span> 
+               <span className='col-6'><span className={`badge ${status === 'Unpaid' ? 'bg-warning text-black' : 'bg-success text-white'} fw-bold`}>{status}</span> </span> 
+                 </div>
+
+                 <div className='row'>
+          <div className=' text-start'> 
+                 <div className="form-check form-check-inline">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    id="statusUnpaid"
+                    value="Unpaid"
+                    checked={status === 'Unpaid'}
+                    onChange={handleStatusChange}
+                  />
+                  <label className="form-check-label" htmlFor="statusUnpaid">Unpaid</label>
+                </div>
+                <div className="form-check form-check-inline">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    id="statusPaid"
+                    value="Paid"
+                    checked={status === 'Paid'}
+                    onChange={handleStatusChange}
+                  />
+                  <label className="form-check-label" htmlFor="statusPaid">Paid</label>
+                </div> 
+                 </div>
+          </div>
+          </div>
+
+
+        </div>
+       
+        <div className="row my-2 mx-1 justify-content-center invoicetable p-0" id='invoicepos '>
+        <div className="table-container p-0">
+        <div>
+      {data.length === 0 ? (
+        <div className="text-center my-5 pt-5">
+
+          <Icon icon={addCircleOutline} width="40" height="40" />
+          <p className="mt-2">No data available. Click the add button to insert a new item.</p>
+        </div>
+      ) : (
+        <table className="table table-striped p-0 invoice">
+          <thead>
+            <tr>
+              <th scope="col" className="text-center">Fruit</th>
+              <th scope="col" className="text-center">Quantity</th>
+              <th scope="col" className="text-center">Price</th>
+              <th scope="col" className="text-center">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((d, index) => (
+              <tr scope="row" key={index}>
+                <td className="text-center">{d.Fruit}</td>
+                <td className="text-center">{d.Quantity}</td>
+                <td className="text-center">{d.Price}</td>
+                <td className="text-center">{d.Amount}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+</div>
+
+        </div>
+        <hr />
+        <div className='row '>
+          <div className='col-12 '>
+          <span className='row mx-2 pb-0'><span className='col-3 text-muted fw-bold p-0 text-start ps-3'>Item : </span><span className='col-9 p-0'>{data.length}</span></span>
+          </div>
+        </div>
+
+        <div className="row mb-0 mx-2">
+
+          <div className='col-12'>
+            <p className="text-black">
+              <span className="text-black me-3 fw-bold text-muted"> Total Amount</span>
+              <span style={{ fontSize:'18px' }} className='fw-bold '>$ {parseFloat(totalAmount).toFixed(2)}</span>
+            </p>
+          </div>
+        </div>
+        <hr className='mt-0' />
+      </div>
+      <div className="row py-1 mb-0 mx-auto text-center footer">
+        <div className="col-4 p-0">
+          <button type="button" onClick={handlePrint} className="btn btn-primary inbtn p-0 py-1" style={{ width: "80px" }} >Print</button>
+        </div>
+        <div className="col-4 p-0">
+          <button onClick={handleClick} type="button" className="btn btn-warning inbtn p-0 py-1" style={{ width: "80px" }}>Save</button>
+        </div>
+        <div className="col-4 p-0">
+          <button type="button" className="btn btn-danger inbtn py-1 p-0" style={{ width: "80px" }} >Submit</button>
+        </div>
+      </div>
+      <div className='row fw-bold'>
+        <div className='col-12 text-center'>
+          <p>Thank you for your purchase!</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default BodyLeft;
+

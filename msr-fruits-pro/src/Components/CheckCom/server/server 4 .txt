@@ -1,0 +1,181 @@
+const express = require('express');
+const mysql = require('mysql');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const app = express();
+const port = 8081;
+
+// Enable CORS
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type']
+}));
+
+// Parse JSON bodies
+app.use(bodyParser.json());
+
+// Create connection to the database
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: 'Mysql-prakashs',
+  database: 'msrfruits'
+});
+
+// Connect to the database
+db.connect(err => {
+  if (err) {
+    console.error('Database connection error:', err);
+    process.exit(1);
+  }
+  console.log('MySQL connected...');
+});
+
+// Route to get all products
+app.get('/prodects', (req, res) => {
+  const sql = 'SELECT * FROM prodects';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Database query error' });
+    }
+    res.json(results);
+  });
+});
+
+// Route to add a new product
+app.post('/prodects', (req, res) => {
+  const { OrderId, Fruit, Quantity, Price, Amount, TotalAmount } = req.body;
+  const sql = 'INSERT INTO prodects (OrderId, Fruit, Quantity, Price, Amount, TotalAmount) VALUES (?, ?, ?, ?, ?, ?)';
+  db.query(sql, [OrderId, Fruit, Quantity, Price, Amount, TotalAmount], (err, result) => {
+    if (err) {
+      console.error('Database insertion error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ message: 'New product added', id: result.insertId });
+  });
+});
+
+// Route to delete a product by ID
+app.delete('/prodects/:id', (req, res) => {
+  const id = req.params.id;
+  const sql = 'DELETE FROM prodects WHERE id = ?';
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error('Database deletion error:', err);
+      return res.status(500).json({ error: 'Database deletion error' });
+    }
+    res.json({ message: 'Product deleted' });
+  });
+});
+
+// Route to delete all products
+app.delete('/prodects', (req, res) => {
+  const sql = 'DELETE FROM prodects';
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error('Database deletion error:', err);
+      return res.status(500).json({ error: 'Database deletion error' });
+    }
+    res.json({ message: 'All products deleted', affectedRows: result.affectedRows });
+  });
+});
+
+
+
+
+
+
+// Route to handle posting user data
+app.post('/users', (req, res) => {
+  const { OrderId, UserName, UserMobile } = req.body;
+  const query = 'INSERT INTO users (OrderId, UserName, UserMobile) VALUES (?, ?, ?)';
+  db.query(query, [OrderId, UserName, UserMobile], (err, result) => {
+    if (err) {
+      console.error('Error inserting user data:', err);
+      return res.status(500).json({ error: 'Error inserting data' });
+    }
+    res.status(201).json({ message: 'User data inserted successfully' });
+  });
+});
+
+// Route to get all customer data
+app.get('/customerlist', (req, res) => {
+  const sql = 'SELECT * FROM customerlist';
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Database query error' });
+    }
+    res.json(results);
+  });
+});
+
+// Route to get details of a specific order by OrderId
+app.get('/customerlist/:orderId', (req, res) => {
+  const { orderId } = req.params;
+  const sql = 'SELECT * FROM customerlist WHERE OrderId = ?';
+
+  db.query(sql, [orderId], (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Database query error' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: `Order with ID ${orderId} not found.` });
+    }
+
+    res.json(results);
+  });
+});
+
+
+
+// Route to handle posting customer and table data
+// Route to handle posting customer and table data
+app.post('/customerlist', (req, res) => {
+  const { OrderId, UserName, UserMobile, tableData } = req.body;
+
+  // Start transaction
+  db.beginTransaction(err => {
+    if (err) {
+      console.error('Error starting transaction:', err);
+      return res.status(500).json({ error: 'Error starting transaction' });
+    }
+
+    // Prepare batch insertion for table data
+    const tableQuery = 'INSERT INTO customerlist (OrderId, UserName,UserMobile, Fruit, Quantity, Price, Amount) VALUES ?';
+    const values = tableData.map(item => [OrderId, UserName,UserMobile, item.Fruit, item.Quantity, item.Price, item.Amount]);
+
+    db.query(tableQuery, [values], (err) => {
+      if (err) {
+        return db.rollback(() => {
+          console.error('Error inserting table data:', err);
+          res.status(500).json({ error: 'Error inserting table data' });
+        });
+      }
+
+      db.commit(err => {
+        if (err) {
+          return db.rollback(() => {
+            console.error('Error committing transaction:', err);
+            res.status(500).json({ error: 'Error committing transaction' });
+          });
+        }
+        res.status(201).json({ message: 'Customer and table data inserted successfully' });
+      });
+    });
+  });
+});
+
+
+
+
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});

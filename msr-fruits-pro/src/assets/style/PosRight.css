@@ -1,0 +1,38 @@
+/* styles.css or your component's CSS file */
+.table-container {
+    max-height: 700px; /* Adjust height as needed */
+    overflow-y: auto;  /* Enable vertical scrolling */
+    height: 499px;
+  }
+  
+  .postablebody {
+    /* display: block; */
+    max-height: 400px; /* Match the height of the container */
+    overflow-y: auto;  /* Enable vertical scrolling */
+    width: 100%;
+  }
+  
+  .postablebody tr {
+    /* display: table; */
+    width: 100%;
+    table-layout: fixed; /* Ensure consistent column width */
+  }
+  
+  .postablebody td {
+    padding: 8px;
+    border: 1px solid #ddd; /* Optional: Add borders for better visibility */
+  }
+  thead {
+    position: sticky;
+    top: 0;
+    background-color: #f1f1f1; /* Ensure the background color is set */
+    z-index: 1; /* Ensures header is above other content */
+  }
+
+
+
+
+
+  .viewbutton{
+    background-color: #0dcaf0;
+  }

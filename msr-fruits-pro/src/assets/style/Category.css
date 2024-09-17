@@ -1,0 +1,236 @@
+.cat-card{
+    height: 170px;
+}
+
+.card-body.exotic {
+    position: relative;
+    background-image: url('../img//Category/exotic.png');
+    background-size:contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.card-body.exotic::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+.card-body.exotic:hover{
+        background: transparent; 
+}
+.name{
+    background-color: rgba(254, 254, 254, 0.627);
+}
+
+/* .card-body.exotic > * {
+    position: relative;
+    z-index: 2;
+}    */
+
+
+/* citrus */
+.card-body.citrus {
+    position: relative;
+    background-image: url('../img//Category/citrus-fruits.png');
+    background-size:cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.card-body.citrus::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+.card-body.citrus:hover{
+        background: transparent; 
+}
+/* berry */
+.card-body.berry {
+    position: relative;
+    background-image: url('../img//Category/Berry.png');
+    background-size:contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.card-body.berry::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+.card-body.berry:hover{
+        background: transparent; 
+}
+/* tropical */
+.card-body.tropical {
+    position: relative;
+    background-image: url('../img//Category/tropical.png');
+    background-size:contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.card-body.tropical::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+.card-body.tropical:hover{
+        background: transparent; 
+}
+/* stone */
+.card-body.stone {
+    position: relative;
+    background-image: url('../img//Category/stone.jpg');
+    background-size:contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.card-body.stone::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+.card-body.stone:hover{
+        background: transparent; 
+}
+/* melons */
+.card-body.melons {
+    position: relative;
+    background-image: url('../img//Category/melon.png');
+    background-size:contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.card-body.melons::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+.card-body.melons:hover{
+        background: transparent; 
+}
+/* dried */
+.card-body.dried {
+    position: relative;
+    background-image: url('../img//Category/dried.png');
+    background-size:contain;
+    background-position: center;
+    background-repeat: no-repeat;
+
+}
+
+.card-body.dried::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+.card-body.dried:hover{
+        background: transparent; 
+}
+.category{
+
+    border-style: none;
+    background: none;
+
+}
+
+
+
+/* popup  */
+
+
+
+/* In your CSS file (e.g., Body.css) */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    position: relative;
+    width: 400px;
+    max-width: 90%;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button[type="submit"] {
+    width: 100%;
+}
+
+/* input box - popup */

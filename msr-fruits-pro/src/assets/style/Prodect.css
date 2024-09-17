@@ -1,0 +1,172 @@
+/* src/Components/NumberInputWithIcon.css */
+
+.form-icon-trailing {
+    padding-right: 2.5rem; /* Adjust based on icon size */
+    position: relative;
+}
+
+.form-icon-trailing + .trailing {
+    position: absolute;
+    right: 0.75rem; /* Adjust based on padding */
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none; /* Prevent clicks on the icon from affecting input */
+}
+
+
+/* src/Components/ScrollableTable.css */
+
+.scrollable-table-container {
+    max-height: 352px; /* Adjust height as needed */
+    /* Adjust height as needed */
+    overflow-y: auto; /* Vertical scrollbar */
+    overflow-x: auto; /* Horizontal scrollbar if needed */
+    height:352px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th, .table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f9f9f9;
+}
+
+
+
+/*  */
+
+/*// Glow Border Animation //*/
+.cd__main{
+    background: #000 !important;
+ }
+ .animated-border-box, .animated-border-box-glow{
+   max-height: 200px;
+   max-width: 250px;
+   height: 100%;
+   width: 100%;
+   position: absolute;
+   overflow: hidden; 
+   z-index: 0;
+   /* Border Radius */
+     border-radius: 10px;
+ }
+ 
+ .animated-border-box-glow{
+   overflow: hidden;
+   /* Glow Blur */
+   filter: blur(20px);
+ }
+ 
+ .animated-border-box:before, .animated-border-box-glow:before {
+   content: '';
+   z-index: -2;
+   text-align: center;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -50%) rotate(0deg);
+   position: absolute;
+     width: 99999px;
+     height: 99999px;
+     background-repeat: no-repeat;
+     background-position: 0 0;
+   /*border color, change middle color*/
+     background-image: conic-gradient(rgba(0,0,0,0), #1976ed, rgba(0,0,0,0) 25%);
+   /* change speed here */
+     animation: rotate 4s linear infinite;
+ }
+ 
+ .animated-border-box:after {
+     content: '';
+     position: absolute;
+     z-index: -1;
+   /* border width */
+     left: 5px;
+     top: 5px;
+   /* double the px from the border width left */
+     width: calc(100% - 10px);
+     height: calc(100% - 10px);
+   /*bg color*/
+     background: #292a2e;
+   /*box border radius*/
+     border-radius: 7px;
+ }
+ 
+ @keyframes rotate {
+     100% {
+         transform: translate(-50%, -50%) rotate(1turn);
+     }
+ }
+ 
+ /*// Border Animation END//*/
+ 
+ 
+ 
+ /*// Ignore This //*/
+ body {
+   margin: 0px;
+ }
+ 
+ .center-box{
+   height: 100vh;
+   display: flex;
+   justify-content: center;
+   /* align-items: center; */
+   background-color: #1D1E22;
+ }
+
+
+ .invoicebtn{
+height: 45px;
+ }
+
+
+
+ /* bodyLeft */
+ /* popup  */
+ /* Popup container */
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  width: 400px; /* Adjust width as needed */
+}
+
+/* Popup content */
+.popup-content {
+  text-align: center;
+}
+
+/* Popup close button */
+.popup button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+/* Backdrop */
+.popup-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}

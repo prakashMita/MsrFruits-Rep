@@ -1,0 +1,42 @@
+
+@media print {
+    body * {
+      visibility: hidden;
+    }
+  
+
+    .printable-area, .printable-area * {
+      visibility: visible;
+    }
+  
+
+    .printable-area {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+  
+
+    .page-break {
+      page-break-before: always;
+    }
+  }
+  
+
+@media print {
+  .form-check-inline {
+    display: none;
+  }
+
+
+  .react-app-name, 
+  .navbar, 
+  .footer
+  {
+    display: none;
+  }
+
+}
+
+

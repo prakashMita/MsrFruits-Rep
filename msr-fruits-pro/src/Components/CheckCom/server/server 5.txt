@@ -1,0 +1,213 @@
+const express = require('express');
+const mysql = require('mysql');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const app = express();
+const port = 8081;
+
+// Enable CORS
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type']
+}));
+
+// Parse JSON bodies
+app.use(bodyParser.json());
+
+// Create connection to the database
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: 'Mysql-prakashs',
+  database: 'msrfruits'
+});
+
+// Connect to the database
+db.connect(err => {
+  if (err) {
+    console.error('Database connection error:', err);
+    process.exit(1);
+  }
+  console.log('MySQL connected...');
+});
+
+// Route to get all products
+app.get('/prodects', (req, res) => {
+  const sql = 'SELECT * FROM prodects';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Database query error' });
+    }
+    res.json(results);
+  });
+});
+
+// Route to add a new product
+app.post('/prodects', (req, res) => {
+  const { OrderId, Fruit, Quantity, Price, Amount, TotalAmount } = req.body;
+  const sql = 'INSERT INTO prodects (OrderId, Fruit, Quantity, Price, Amount, TotalAmount) VALUES (?, ?, ?, ?, ?, ?)';
+  db.query(sql, [OrderId, Fruit, Quantity, Price, Amount, TotalAmount], (err, result) => {
+    if (err) {
+      console.error('Database insertion error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ message: 'New product added', id: result.insertId });
+  });
+});
+
+// Route to delete a product by ID
+app.delete('/prodects/:id', (req, res) => {
+  const id = req.params.id;
+  const sql = 'DELETE FROM prodects WHERE id = ?';
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error('Database deletion error:', err);
+      return res.status(500).json({ error: 'Database deletion error' });
+    }
+    res.json({ message: 'Product deleted' });
+  });
+});
+
+// Route to delete all products
+app.delete('/prodects', (req, res) => {
+  const sql = 'DELETE FROM prodects';
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error('Database deletion error:', err);
+      return res.status(500).json({ error: 'Database deletion error' });
+    }
+    res.json({ message: 'All products deleted', affectedRows: result.affectedRows });
+  });
+});
+
+
+
+
+
+
+// Route to handle posting user data
+app.post('/users', (req, res) => {
+  const { OrderId, UserName, UserMobile } = req.body;
+  const query = 'INSERT INTO users (OrderId, UserName, UserMobile) VALUES (?, ?, ?)';
+  db.query(query, [OrderId, UserName, UserMobile], (err, result) => {
+    if (err) {
+      console.error('Error inserting user data:', err);
+      return res.status(500).json({ error: 'Error inserting data' });
+    }
+    res.status(201).json({ message: 'User data inserted successfully' });
+  });
+});
+
+// Route to get all customer data
+app.get('/customerlist', (req, res) => {
+  const query = `
+    SELECT cl.*, os.OrderStatus
+    FROM customerlist cl
+    LEFT JOIN orderstatus os ON cl.OrderId = os.OrderId;
+  `;
+
+  db.query(query, (error, results) => {
+    if (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).send('Error fetching data.');
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+
+
+
+
+// Route to get details of a specific order by OrderId
+app.get('/customerlist/:orderId', (req, res) => {
+  const { orderId } = req.params;
+  const sql = 'SELECT * FROM customerlist WHERE OrderId = ?';
+
+  db.query(sql, [orderId], (err, results) => {
+    if (err) {
+      console.error('Database query error:', err);
+      return res.status(500).json({ error: 'Database query error' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: `Order with ID ${orderId} not found.` });
+    }
+
+    res.json(results);
+  });
+});
+
+
+
+app.post('/customerlist', (req, res) => {
+  const { OrderId, UserName, UserMobile, tableData, TotalAmount, TotalItem, OrderStatus } = req.body;
+
+  tableData.forEach(async (item) => {
+    const query = `
+      INSERT INTO customerlist (OrderId, UserName, UserMobile, Fruit, Quantity, Price, Amount, OrderStatus)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const values = [
+      OrderId,
+      UserName,
+      UserMobile,
+      item.Fruit,
+      item.Quantity,
+      item.Price,
+      item.Amount,
+      OrderStatus
+    ];
+
+    db.query(query, values, (error, results) => {
+      if (error) {
+        console.error('Error inserting data:', error);
+        res.status(500).send('Error inserting data.');
+      }
+    });
+  });
+
+  res.send('Data inserted successfully.');
+});
+
+
+
+
+
+// app.get('/customerlist/length', async (req, res) => {
+//   try {
+//     const customers = await CustomerModel.find(); // Adjust according to your DB
+//     res.json({ length: customers.length });
+//   } catch (error) {
+//     res.status(500).json({ error: 'Error fetching customer list length.' });
+//   }
+// });
+
+// Route to post order status
+app.post('/orderstatus', (req, res) => {
+  const { OrderId, OrderStatus } = req.body;
+
+  if (!OrderId || !OrderStatus) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const query = 'INSERT INTO orderstatus (OrderId, OrderStatus) VALUES (?, ?)';
+  db.query(query, [OrderId, OrderStatus], (error, results) => {
+    if (error) {
+      console.error('Error inserting order status:', error);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.status(201).json({ message: 'Order status added successfully' });
+  });
+});
+
+
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
