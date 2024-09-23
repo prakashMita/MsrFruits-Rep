@@ -406,119 +406,106 @@ function BodyLeft() {
 
 
   const handlePrint = () => {
+    // Debugging: Log the values to ensure they're correct
+    console.log('Order Type:', orderType);
+    console.log('Total Amount:', totalAmount);
+    console.log('CLCN Amount:', values.CommTableTotal);
+    console.log('Final Amount:', finalAmount);
+  
     const currentDate = new Date().toLocaleDateString();
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const customerName = formData.name || "Not Provided";
-    const phone = formData.mobile || "Not Provided";
-    const totalAmount = data.reduce((total, item) => total + parseFloat(item.Amount || 0), 0).toFixed(2);
   
-    console.log("FormData:", formData); // Debugging statement
-    console.log("Total Amount:", totalAmount); // Debugging statement
+    // Build additionalContent based on isChecked
+    let additionalContent = '';
   
-    const printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.open();
-    printWindow.document.write(`
+    if (isChecked) {
+      additionalContent += `
+        <div class='col-6'>
+          <p style="font-size: 12px; margin: 0px;">Commission: <span class="bold">${values.Comm || '0'}</span></p>
+          <p style="font-size: 12px; margin: 0px;">Lorry Rent: <span class="bold">${values.LorryRent || '0'}</span></p>
+          <p style="font-size: 12px; margin: 0px;">Cooly: <span class="bold">${values.Cooly || '0'}</span></p>
+          <p style="font-size: 12px; margin: 0px;">Note Cash: <span class="bold">${values.NoteCash || '0'}</span></p>
+          <p style="font-size: 12px; font-weight: bold;">CLCN Total: <span class="bold">${values.CommTableTotal || '0'}</span></p>
+        </div>
+      `;
+    }
+  
+    // Define conditional content based on orderType
+    let saleOrderContent = '';
+  
+    if (orderType === 'saleOrder') {
+      saleOrderContent = `
+        <p style="font-size: 12px; margin: 0px;">
+          Item Amount: ${parseFloat(totalAmount || 0).toFixed(2)}
+        </p>
+        <p style="font-size: 12px; margin: 0px;">
+          CLCN Amount: ${parseFloat(values.CommTableTotal || 0).toFixed(2)}
+        </p>
+      `;
+    }
+  
+    // Complete HTML content
+    const htmlContent = `
       <html>
       <head>
         <title>Invoice</title>
         <style>
-             body {
-      font-family: Courier, monospace;
-      width: 70mm;
-      margin: 0;
-      padding: 0;
-      font-size: 10px;
-    }
-    .center {
-      text-align: center;
-    }
-    .bold {
-      font-weight: bold;
-      padding-left:10px;
-
-    }
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .table th, .table td {
-      border-bottom: 1px dashed #000;
-      padding: 2px 0;
-      // text-align: left;
-      text-align: center;
-    }
-.row {
-  display: flex;
-  justify-content: space-between;
-}
-
-.col-6, .col-5 {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.text-right {
-  text-align: right;
-}
-    .footeritem {
-      margin-top: 10px;
-    }
-    .total {
-      font-size: 12px;
-    }
-    .comtitle {
-      font-size: 14px;
-    }
-    .fullbody {
-      margin: auto;
-    }
-      .topbody{
-      margin:auto 
-      }
-      .border{
-      width:270px
-      }
- .table th{
- padding:5px
- }
-
-
-
-
-
-
-
- 
-
+          body {
+            font-family: Courier, monospace;
+            width: 70mm;
+            margin: 0;
+            padding: 10px;
+            font-size: 10px;
+          }
+          .center { text-align: center; }
+          .bold { font-weight: bold; padding-left:10px; }
+          .table { width: 100%; border-collapse: collapse; }
+          .table th, .table td {
+            border-bottom: 1px dashed #000;
+            padding: 2px 0;
+            text-align: center;
+          }
+          .row { display: flex; justify-content: space-between; }
+          .col-6, .col-5 { display: flex; flex-direction: column; justify-content: space-between; }
+          .text-right { text-align: right; }
+          .footeritem { margin-top: 10px; }
+          .total { font-size: 12px; }
+          .comtitle { font-size: 14px; }
+          .fullbody { margin: auto; }
+          .topbody { margin: auto; }
+          .border { width: 270px; border-top: 1px solid #000; margin: 10px 0; }
+          .table th { padding: 5px; }
         </style>
       </head>
       <body class='fullbody'>
-        <div class="center bold comtitle">MSR.com</div>
-        <div class='topbody'>
-        <hr class='border'/>
-        <div class="row ">
-          <div class="col-6 text-left">
-            <div>Invoice ID: ${orderId}</div>
-            <div>Customer: ${customerName}</div>
-            <div>Phone: ${phone}</div>
-          </div>
-          <div class="col-1"></div>
-          <div class="col-5 text-right ">
-            <div class='text-start'>Date: ${currentDate}</div>
-            <div>Time: ${currentTime}</div>
-            <div>Status: ${status}</div>
-          </div>
+        <div class="center p-0 m-0">
+        <span class="center bold comtitle p-0 m-0 py-0 my-0">MSR Commission Mundy</span><br>
+        <span class="center p-0 m-0 my-0 py-0">Sirumalai Set</span><br>
+        <span class="center p-0 m-0 my-0 py-0">Dindigul</span><br>
+        <span class="center p-0 m-0 my-0 py-0">Phone: 8940093502</span><br>
         </div>
-        <hr class='border' />
+        <div class='topbody'>
+          <div class='border'></div>
+          <div class="row">
+            <div class="col-6">
+              <div>Invoice ID: ${orderId}</div>
+              <div>Customer: <span style="font-weight: bold;">${formData.name.toUpperCase()}</span></div>
+              <div>Phone: ${formData.mobile}</div>
+            </div>
+            <div class="col-5 text-left">
+              <div>Date: ${currentDate}</div>
+              <div>Time: ${currentTime}</div>
+              <div>Total Item: <span class='bold'>${totalQuantity}</span></div>
+            </div>
+          </div>
+          <div class='border'></div>
         </div>
         <table class="table">
           <thead>
             <tr>
-              <th class='tablehead'>Fruit </th>
-              <th class='tablehead'> Quantity </th>
-              <th class='tablehead'> Price </th>
-              <th class='tablehead'> Amount</th>
+              <th>Fruit</th>
+              <th>Quantity</th>
+              <th>Price</th>
             </tr>
           </thead>
           <tbody>
@@ -526,34 +513,54 @@ function BodyLeft() {
               <tr>
                 <td>${d.Fruit}</td>
                 <td>${d.Quantity}</td>
-                <td>${d.Price}</td>
-                <td>${d.Amount}</td>
+                <td>${parseFloat(d.Price).toFixed(2)}</td>
               </tr>
             `).join('')}
           </tbody>
         </table>
         <div class="row footeritem">
-          <div class='col-4 text-left'>
-            <div class='bold'>
-              <span>Total Item: ${totalQuantity}</span>
-            </div>
+          <div class='col-4'>
+            <!-- Potentially other content -->
           </div>
           <div class='col-8 text-right'>
             <div class="total">
-              <span class="bold">Total: $ ${parseFloat(totalAmount).toFixed(2)}</span>
+              <span class="bold"></span>
             </div>
           </div>
         </div>
-        <hr class='border' />
+        <div class='row'>
+          ${additionalContent}
+          <div class='col-6 p-0 ps-0 ms-0'>
+            
+          </div>
+        </div>
+        <div class=row>
+        <div class='col-12 p-0 ps-0 ms-0'>
+            <div style="margin-bottom: 5px;paddingLeft:0px;">
+              ${saleOrderContent} <!-- Conditionally rendered content -->
+              <div class='border'></div>
+              <p style="font-size: 12px; margin: 0px;paddingLeft:0px;paddingRight:0px;">
+                <span class='ps-0 ms-0' style='font-weight: bold ;'>Total Amount:<span style='font-weight: bold ;paddingleft:'0px'> ${parseFloat(finalAmount || 0).toFixed(2)}</span></span>
+              </p>
+            </div>
+          </div></div>
+        <div class='border'></div>
         <div class="center">Thank you for your purchase!</div>
       </body>
       </html>
-    `);
+    `;
+  
+    // Open print window
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
     printWindow.close();
   };
+  
+  
   
       // Calculate the total quantity
       const totalQuantity =data.reduce((total, customer) => 
@@ -891,7 +898,7 @@ function BodyLeft() {
 
       {/* Store Information */}
       <div style={{ textAlign: 'center', marginBottom: '5px' }}>
-        <p style={{ fontSize: '16px', fontWeight: 'bold' }}>MSR.com</p>
+        <p style={{ fontSize: '16px', fontWeight: 'bold' }}>MSR Fruits</p>
       </div>
 
       {/* Customer Details */}
@@ -899,7 +906,7 @@ function BodyLeft() {
         <div className='col-6'>
         <p style={{ fontSize: '12px' }}>To: <span className='fw-bold'>{formData.name.toUpperCase()}</span></p>
         <p style={{ fontSize: '12px' }}>Phone: <span className='fw-bold'>{formData.mobile}</span></p>
-        <p style={{ fontSize: '12px' }}>
+        <p style={{ fontSize: '12px' ,fontWeight:'bold'}}>
           Items: {totalQuantity}
         </p>
         </div>
@@ -917,7 +924,7 @@ function BodyLeft() {
       </div>
 
       {/* Order Items Table */}
-      <div style={{ marginBottom: '5px', borderBottom: '1px solid black', paddingBottom: '5px' ,maxHeight:'700px',overflowY:'auto',height:'323px'}}>
+      <div style={{ marginBottom: '1px', borderBottom: '1px solid black', paddingBottom: '5px' ,maxHeight:'700px',overflowY:'auto',height:'315px'}}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead style={{ 
     position: 'sticky', 
@@ -955,23 +962,29 @@ function BodyLeft() {
           <p  style={{ fontSize: '12px', fontWeight: 'bold' }}>CLCN Total <span className='fw-bold'>: {values.CommTableTotal}</span></p>
         </div>
       )}
-        <div className='col-6'>
-      {/* Total Items and Amount */}
-      <div style={{ marginBottom: '5px' }}>
-        {/* <p style={{ fontSize: '12px' }}>
-          Items: {totalQuantity}
-        </p> */}
+<div className='col-6 px-0'>
+  {/* Total Items and Amount */}
+  <div style={{ marginBottom: '5px' ,height:'110px'}}>
+    {/* Conditionally render Item Amount and CLCN Amount */}
+    {orderType == 'SaleOrder' && (
+      <>
         <p style={{ fontSize: '12px', fontWeight: 'bold' }}>
-          Item Amount:$ {parseFloat(totalAmount).toFixed(2)}
+          Item Amount: $ {parseFloat(totalAmount).toFixed(2)}
         </p>
         <p style={{ fontSize: '12px', fontWeight: 'bold' }}>
-          CLCN Amount:$ {values.CommTableTotal}
+          CLCN Amount: $ {parseFloat(values.CommTableTotal).toFixed(2)}
         </p>
-        <p style={{ fontSize: '12px', fontWeight: 'bold' }}>
-        <span>Total Amount:$ {finalAmount}</span>
-        </p>
-      </div>
-        </div>
+      </>
+    )}
+    {/* Always show Total Amount */}
+    {/* <p className=''></p> */}
+    <p style={{ fontSize: '12px', fontWeight: 'bold',paddingTop:'65px'}}>
+      <span>Total Amount: <span className='fs-5'> {parseFloat(finalAmount).toFixed(2)}</span></span>
+    </p>
+  </div>
+</div>
+
+
       </div>
 
 
@@ -996,8 +1009,8 @@ function BodyLeft() {
         </div>
       )}
 
-      <div style={{ textAlign: 'center', fontSize: '12px', marginTop: '5px' }}>
-        <p>Thank you for your purchase!</p>
+      <div style={{ textAlign: 'center', fontSize: '12px', marginTop: '5px' ,marginBottom:'0px'}}>
+        <p className='mb-0'>Thank you for your purchase!</p>
       </div>
     </div>
 
